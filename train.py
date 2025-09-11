@@ -12,11 +12,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path", type=str, required=True, help="Path to raw.pkl or processed.pkl")
     parser.add_argument("--dataset_type", type=str, choices=["raw", "processed"], default="processed")
-    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--repr_dim", type=int, default=256)
     parser.add_argument("--seq_len", type=int, default=1600)
     parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--lr", type=float, default=4e-3)
+    parser.add_argument("--lr", type=float, default=2e-3)
     args = parser.parse_args()
 
     dataset = TimeSeriesDataset(pkl_path=args.data_path, mode=args.dataset_type, seq_length=args.seq_len)
@@ -37,4 +37,4 @@ if __name__ == "__main__":
         verbose=True
     )
 
-    model.save("checkpoints/ts2vec_model.pt")
+    model.save("ts2vec_model.pt")

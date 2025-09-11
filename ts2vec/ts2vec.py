@@ -1,3 +1,5 @@
+import os
+import json
 import torch
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
@@ -41,6 +43,9 @@ class TS2Vec:
         '''
         
         super().__init__()
+        self.input_dims = input_dims
+        self.output_dims = output_dims
+        self.hidden_dims = hidden_dims
         self.device = device
         self.lr = lr
         self.batch_size = batch_size
@@ -56,6 +61,26 @@ class TS2Vec:
         
         self.n_epochs = 0
         self.n_iters = 0
+
+        self.save_hyperparameters()
+
+    def save_hyperparameters(self):
+        hps = dict(
+            input_dims = self.input_dims,
+            output_dims = self.output_dims,
+            hidden_dims = self.hidden_dims,
+            device = str(self.device),
+            lr = self.lr,
+            batch_size = self.batch_size,
+            max_train_length = self.max_train_length,
+            temporal_unit = self.temporal_unit,
+            after_iter_callback = self.after_iter_callback,
+            after_epoch_callback = self.after_epoch_callback,
+        )
+
+        os.makedirs("checkpoints", exist_ok=True)
+        with open("checkpoints/hyperparameters.json", "w") as f:
+            json.dump(hps, f, indent=4)
     
     def fit(self, train_data, n_epochs=None, n_iters=None, verbose=False):
         ''' Training the TS2Vec model.
@@ -306,7 +331,8 @@ class TS2Vec:
         Args:
             fn (str): filename.
         '''
-        torch.save(self.net.state_dict(), fn)
+        os.makedirs("checkpoints", exist_ok=True)
+        torch.save(self.net.state_dict(), f"checkpoints/{fn}")
     
     def load(self, fn):
         ''' Load the model from a file.
