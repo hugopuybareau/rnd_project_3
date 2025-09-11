@@ -4,16 +4,14 @@ import pandas as pd
 import numpy as np
 
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from torch.utils.data import TensorDataset
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 
 
-class TimeSeriesDataset(object):
-    def __init__(self, pkl_path, mode="processed", seq_len=3, prediction_window=1):
+class TimeSeriesDataset(Dataset):
+    def __init__(self, pkl_path, mode="processed", seq_length=1024):
 
         self.mode = mode
-        self.seq_len = seq_len
-        self.prediction_window = prediction_window
+        self.seq_length = seq_length
         self.scaler = StandardScaler()
 
         with open(pkl_path, "rb") as f:
@@ -49,55 +47,22 @@ class TimeSeriesDataset(object):
             df = self.scaler.fit_transform(df) if self.scaler is not None else df
             df = pd.DataFrame(df, columns=columns)
 
-            #df_resampled = self._resample_dataframe(df)
-            processed_list.append(df)
+            df_resampled = self._resample_dataframe(df)
+            processed_list.append(df_resampled)
 
         return processed_list
 
-    # def _resample_dataframe(self, df):
-    #     new_index = np.linspace(0, 1, self.seq_len)
-    #     old_index = np.linspace(0, 1, len(df))
-    #     df_resampled = pd.DataFrame(
-    #         {col: np.interp(new_index, old_index, df[col].values) for col in df.columns}
-    #     )
-    #     return df_resampled
+    def _resample_dataframe(self, df):
+        new_index = np.linspace(0, 1, self.seq_length)
+        old_index = np.linspace(0, 1, len(df))
+        df_resampled = pd.DataFrame(
+            {col: np.interp(new_index, old_index, df[col].values) for col in df.columns}
+        )
+        return df_resampled
+
+    def __len__(self):
+        return len(self.dfs)
     
-    def frame_series(self, dfs):
-        """
-        Function used to prepare the data for time series prediction
-        :return: TensorDataset
-        """
-
-        features, target, y_hist = [], [], []
-
-        for X in dfs:
-            nb_obs = X.shape[0]
-            X = X.values
-            for i in range(1, nb_obs - self.seq_len - self.prediction_window):
-                features.append(torch.FloatTensor(X[i:i + self.seq_len, :]).unsqueeze(0))
-                y_hist.append(torch.FloatTensor(X[i - 1: i + self.seq_len - 1, :]).unsqueeze(0))
-                target.append(torch.FloatTensor(X[i + self.seq_len:i + self.seq_len + self.prediction_window, :]))
-
-        features_var = torch.cat(features)
-        y_hist_var = torch.cat(y_hist)
-        target_var = torch.cat(target)
-        
-        return TensorDataset(features_var, y_hist_var, target_var)
-    
-    def get_loaders(self, batch_size, train_split):
-        """
-        :return: DataLoaders associated to training and testing data
-        """
-        nb_features = self.dfs[0].shape[1]
-
-        n_total = len(self.dfs)
-        n_train = int(train_split * n_total)
-        train_dfs = self.dfs[:n_train]
-        val_dfs = self.dfs[n_train:]
-
-        train_dataset = self.frame_series(train_dfs)
-        val_dataset = self.frame_series(val_dfs)
-
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, drop_last=True)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=True)
-        return train_loader, val_loader, nb_features
+    def __getitem__(self, idx):
+        df = self.dfs[idx]
+        return torch.tensor(df.values, dtype=torch.float32)
