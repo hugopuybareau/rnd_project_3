@@ -17,14 +17,14 @@ class TimeSeriesDataset(Dataset):
         with open(pkl_path, "rb") as f:
             data_dict = pickle.load(f)
 
-        self.ids = [ids for ids in data_dict.values()]
-
+        ids = [ids for ids in data_dict.keys()]
         dfs = [data for data in data_dict.values()]
-        self.dfs = self._preprocess_and_resample(dfs)
+        self.ids, self.dfs = self._preprocess_and_resample(ids, dfs)
 
-    def _preprocess_and_resample(self, df_list):
-        processed_list = []
-        for df in df_list:
+    def _preprocess_and_resample(self, id_list, df_list):
+        processed_id_list = []
+        processed_df_list = []
+        for id, df in zip(id_list, df_list):
             df = df.copy()
             if df.shape[0] < 1000:
                 continue
@@ -48,9 +48,10 @@ class TimeSeriesDataset(Dataset):
             df = pd.DataFrame(df, columns=columns)
 
             df_resampled = self._resample_dataframe(df)
-            processed_list.append(df_resampled)
+            processed_df_list.append(df_resampled)
+            processed_id_list.append(id)
 
-        return processed_list
+        return processed_id_list, processed_df_list
 
     def _resample_dataframe(self, df):
         new_index = np.linspace(0, 1, self.seq_length)
@@ -65,4 +66,5 @@ class TimeSeriesDataset(Dataset):
     
     def __getitem__(self, idx):
         df = self.dfs[idx]
+        id = self.ids[idx]
         return torch.tensor(df.values, dtype=torch.float32)

@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--hidden_size", type=int, default=64)
     parser.add_argument("--repr_dim", type=int, default=128)
-    parser.add_argument("--seq_len", type=int, default=1600)
+    parser.add_argument("--seq_len", type=int, default=1900)
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--lr", type=float, default=1e-3)
     args = parser.parse_args()
@@ -31,11 +31,12 @@ if __name__ == "__main__":
         output_dims=args.repr_dim,
         lr=args.lr,
         batch_size=args.batch_size,
+        dataset_type=args.dataset_type
     )
     loss_log = model.fit(
         train_data,
         n_epochs=args.epochs,
         verbose=True
     )
-
+    
     model.save("ts2vec_model.pt")

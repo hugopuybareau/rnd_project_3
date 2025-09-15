@@ -27,7 +27,8 @@ class TS2Vec:
         max_train_length=None,
         temporal_unit=0,
         after_iter_callback=None,
-        after_epoch_callback=None
+        after_epoch_callback=None,
+        dataset_type="processed",
     ):
         ''' Initialize a TS2Vec model.
         
@@ -61,6 +62,7 @@ class TS2Vec:
         
         self.after_iter_callback = after_iter_callback
         self.after_epoch_callback = after_epoch_callback
+        self.dataset_type = dataset_type
         
         self.n_epochs = 0
         self.n_iters = 0
@@ -79,10 +81,11 @@ class TS2Vec:
             temporal_unit = self.temporal_unit,
             after_iter_callback = self.after_iter_callback,
             after_epoch_callback = self.after_epoch_callback,
+            dataset_type = self.dataset_type
         )
 
-        os.makedirs("checkpoints", exist_ok=True)
-        with open("checkpoints/hyperparameters.json", "w") as f:
+        os.makedirs(f"checkpoints/{self.dataset_type}", exist_ok=True)
+        with open(f"checkpoints/{self.dataset_type}/hyperparameters.json", "w") as f:
             json.dump(hps, f, indent=4)
     
     def fit(self, train_data, n_epochs=None, n_iters=None, verbose=False):
@@ -334,8 +337,8 @@ class TS2Vec:
         Args:
             fn (str): filename.
         '''
-        os.makedirs("checkpoints", exist_ok=True)
-        torch.save(self.net.state_dict(), f"checkpoints/{fn}")
+        os.makedirs(f"checkpoints/{self.dataset_type}", exist_ok=True)
+        torch.save(self.net.state_dict(), f"checkpoints/{self.dataset_type}/{fn}")
     
     def load(self, fn):
         ''' Load the model from a file.

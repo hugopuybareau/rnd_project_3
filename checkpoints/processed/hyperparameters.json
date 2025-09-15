@@ -1,0 +1,13 @@
+{
+    "input_dims": 17,
+    "output_dims": 128,
+    "hidden_dims": 64,
+    "device": "mps",
+    "lr": 0.001,
+    "batch_size": 8,
+    "max_train_length": null,
+    "temporal_unit": 0,
+    "after_iter_callback": null,
+    "after_epoch_callback": null,
+    "dataset_type": "processed"
+}
