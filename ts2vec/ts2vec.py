@@ -1,9 +1,12 @@
 import os
 import json
+import numpy as np
+from tqdm import tqdm
+
 import torch
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
-import numpy as np
+
 from .models import TSEncoder
 from .models.losses import hierarchical_contrastive_loss
 from .utils import take_per_row, split_with_nan, centerize_vary_length_series, torch_pad_nan
@@ -125,7 +128,7 @@ class TS2Vec:
             n_epoch_iters = 0
             
             interrupted = False
-            for batch in train_loader:
+            for batch in tqdm(train_loader, leave=False):
                 if n_iters is not None and self.n_iters >= n_iters:
                     interrupted = True
                     break

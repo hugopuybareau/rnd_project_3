@@ -15,11 +15,11 @@ class TimeSeriesDataset(Dataset):
         self.scaler = StandardScaler()
 
         with open(pkl_path, "rb") as f:
-            data = pickle.load(f)
+            data_dict = pickle.load(f)
 
-        self.infos = [d["info"] for d in data]
+        self.ids = [ids for ids in data_dict.values()]
 
-        dfs = [d["data"] for d in data]
+        dfs = [data for data in data_dict.values()]
         self.dfs = self._preprocess_and_resample(dfs)
 
     def _preprocess_and_resample(self, df_list):
